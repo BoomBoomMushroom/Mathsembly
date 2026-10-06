@@ -52,8 +52,6 @@ Instructions
 - MOVE
 - COPY
 - CLTB
-- SET
-- SETB
 - SHOW
 - PRINT
 
@@ -87,4 +85,5 @@ Instructions
 - JMC
 - JMN
 - JMP
-
+- PUSH
+- POP

@@ -2,7 +2,6 @@ import struct
 
 import instructions
 import registers
-import memory
 START_MEMORY_LOCATION = 0x0E1970
 
 class InstructionList:
@@ -54,7 +53,7 @@ def turnIntoInstructionsList(src: str) -> list[instructions.Instruction]:
             loc = parseLiteral(splits[1], 0xFFFFFF) # make sure it's at most 3 bytes
             out.append( instructions.PlaceInMemory_PseudoInstruction(loc) )
         elif iName.startswith("!"):
-            refName = l[1:]
+            refName = line[1:]
             if refName.endswith(":"): refName = refName[:-1] # remove a trailing ":"
             refName = refName.strip()
             out.append( instructions.AddressReference_PseudoInstruction(refName) )
@@ -63,8 +62,6 @@ def turnIntoInstructionsList(src: str) -> list[instructions.Instruction]:
         elif iName == "MOVE": out.append( instructions.MOVE_Instruction(splits[1],splits[2]) )
         elif iName == "COPY": out.append( instructions.COPY_Instruction(splits[1],splits[2]) )
         elif iName == "CLTB": out.append( instructions.CLTB_Instruction(splits[1],splits[2]) )
-        elif iName == "SET": out.append( instructions.SET_Instruction(splits[1], parseLiteral(splits[2], 0xFFFFFFFFFFFFFFFF)) )
-        elif iName == "SETB": out.append( instructions.SETB_Instruction(splits[1], parseLiteral(splits[2], 0xFF)) )
         elif iName == "SHOW": out.append( instructions.SHOW_Instruction() )
         elif iName == "PRINT": out.append( instructions.PRINT_Instruction(splits[1], splits[2]) )
         elif iName == "STOP": out.append( instructions.STOP_Instruction() )
@@ -95,6 +92,8 @@ def turnIntoInstructionsList(src: str) -> list[instructions.Instruction]:
         elif iName == "JMC": out.append( instructions.JMC_Instruction(splits[1]) )
         elif iName == "JMN": out.append( instructions.JMN_Instruction(splits[1]) )
         elif iName == "JMP": out.append( instructions.JMP_Instruction(splits[1]) )
+        elif iName == "PUSH": out.append( instructions.PUSH_Instruction(splits[1]) )
+        elif iName == "POP": out.append( instructions.POP_Instruction(splits[1]) )
         elif iName == "": pass # this ain't an instruction 
         else:
             raise Exception(f"Instruction not found! Trying to find instruction \"{iName}\"")
@@ -109,7 +108,6 @@ def instructionsToMachineCode(instructs: list[instructions.Instruction]) -> byte
     
     references: dict[str, int] = {} # key, value = referenceName, addressPointed
     toReplace: list[tuple[int, str]] = [] # each tuple is (addressToReplace, referenceName)
-    mem = memory.Memory()
     
     for i in instructs:        
         minAddrBound = min(minAddrBound, addr)
@@ -133,9 +131,12 @@ def instructionsToMachineCode(instructs: list[instructions.Instruction]) -> byte
                 try:
                     literalVal = int(regName, base=0)
                     if literalVal > 0xFFFFFFFFFFFFFFFF: raise Exception("Immediate value exceeds 0xFFFFFFFFFFFFFFFF (8 bytes)!")
-                except: pass
+                except:
+                    try:
+                        literalVal = float(regName)
+                    except: pass
                 
-                if registers.isRegister(regName) == False:
+                if registers.isRegister(regName) == False and literalVal == None:
                     literalVal = 0x00000000_00000000
                     toReplace.append( (addr+1, regName) )
                 
@@ -157,6 +158,13 @@ def instructionsToMachineCode(instructs: list[instructions.Instruction]) -> byte
         
         if hasattr(i, "immediate"):
             iVal = i.immediate
+            if type(iVal) == str:
+                try:
+                    iVal = int(iVal, base=0)
+                    if iVal > 0xFFFFFFFFFFFFFFFF: raise Exception("Immediate value exceeds 0xFFFFFFFFFFFFFFFF (8 bytes)!")
+                except:
+                    iVal = float(iVal)
+            
             if type(iVal) == float:
                 iVal = struct.unpack(">q", struct.pack(">d", iVal))[0] # convert float to int preserving its bytes
             
@@ -165,6 +173,19 @@ def instructionsToMachineCode(instructs: list[instructions.Instruction]) -> byte
                 machineCode[addr] = b
                 i.immediateLengthBytes -= 1
                 addr += 1
+    
+    # put in the references
+    for replaceAddr, refName in toReplace:
+        setAddr = references.get(refName, None)
+        if setAddr == None:
+            raise Exception(f"Reference not found! Make sure it is defined! {refName=} {references=}")
+        
+        bytesLeft = 8
+        while bytesLeft > 0:
+            b = (setAddr >> (8*(bytesLeft-1))) & 0xFF
+            machineCode[replaceAddr] = b
+            bytesLeft -= 1
+            replaceAddr += 1
     
     minAddrBound = min(minAddrBound, addr)
     maxAddrBound = max(maxAddrBound, addr)
@@ -175,7 +196,7 @@ def instructionsToMachineCode(instructs: list[instructions.Instruction]) -> byte
 
 
 if __name__ == "__main__":
-    programSourceCode = loadSourceCode("./examplePrograms/exampleRefs.masm")
+    programSourceCode = loadSourceCode("./examplePrograms/bounce.masm")
     programInstructions: list[instructions.Instruction] = turnIntoInstructionsList(programSourceCode)
     for a in programInstructions: print("\t", a)
     machineCode = instructionsToMachineCode(programInstructions)

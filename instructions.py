@@ -105,59 +105,13 @@ class CLTB_Instruction(Instruction):
         print(f"setting {self.regB}'s top byte to {self.regA}'s bottom byte topByte={aBytes[-1]}/{hex(aBytes[-1])} - b={bBytes}")
         mem.setGeneralRegBytes(self.regB, bBytes)
 
-class SET_Instruction(Instruction):
-    """
-    `SET REG_A EIGHT_BYTE_IMMEDIATE`\n
-    REG_A: The destination register\n
-    EIGHT_BYTE_IMMEDIATE: The immediate right after the instruction and specified register, upto 8 bytes, to put into the register\n
-    Sets the bytes in REG_A to the bytes in the immediate. If the immediate is in decimal and the register and immediate types are the same then it will be converted to the correct bytes automatically, optionally you can use `0x` and `0b` to write direct bytes\n
-    Note: If a special register is being written to like ADDR or PC, it will only use the bottom bytes into the register\n
-    SET REG_0F 3.0\n
-    SET REG_0I 6\n
-    SET REG_0I 0xFF00EE11DD22CC44\n
-    SET REG_0F 0b1111111100000000111111110000000011111111000000001111111100000000\n
-    """
-    def __init__(self, regA: REGISTER, immediate: int|float):
-        self.regA = regA
-        self.immediate = immediate
-        self.immediateLengthBytes = 8
-        super().__init__(opcode=0x04, operandBytes=9)
-
-    def execute(self, mem):
-        packType = ">d" if type(self.immediate)==float else ">q"
-        val: bytes = struct.pack(packType, self.immediate)
-        print(f"setting {self.regA=} to {self.immediate=}/{hex(self.immediate)}/{val}")
-        mem.setGeneralRegBytes(self.regA, val)
-
-class SETB_Instruction(Instruction):
-    """
-    `SET REG_A BYTE_IMMEDIATE`\n
-    REG_A: The destination register\n
-    BYTE_IMMEDIATE: The 1 byte immediate right after the instruction and specified register\n
-    Sets the leftmost (most significant) byte in REG_A to the 1 byte immediate. Input value will be interpreted literally, no floats. So a decimal number from 0-255, 0x00 to 0xFF, and 0b00000000 to 0b11111111 (all inclusive)\n
-    Note: If a special register is being written to like ADDR or PC, it will only use the bottom bytes into the register\n
-    Ex: SETB REG_0I 0xFF | REG_0I (0x0000000000000000) -> 0xFF00000000000000
-    """
-    def __init__(self, regA: REGISTER, immediate: int):
-        self.regA = regA
-        self.immediate = immediate
-        self.immediateLengthBytes = 1
-        super().__init__(opcode=0x05, operandBytes=2)
-    
-    def execute(self, mem):
-        val = bytearray()
-        val.append( self.immediate & 0xFF )
-        val.extend( bytes(7) )
-        print(f"setting {self.regA=} to {self.immediate=}/{hex(self.immediate)}/{val}")
-        mem.setGeneralRegBytes(self.regA, val)
-
 class SHOW_Instruction(Instruction):
     """
     `SHOW`\n
     Draws the screen with the values in video memory
     """
     def __init__(self):
-        super().__init__(opcode=0x06, operandBytes=0)
+        super().__init__(opcode=0x04, operandBytes=0)
 
 class PRINT_Instruction(Instruction):
     """
@@ -169,7 +123,7 @@ class PRINT_Instruction(Instruction):
     def __init__(self, regA:REGISTER, regB:REGISTER):
         self.regA = regA
         self.regB = regB
-        super().__init__(opcode=0x07, operandBytes=2)
+        super().__init__(opcode=0x05, operandBytes=2)
 
     def execute(self, mem):
         aBytes = mem.getGeneralRegBytes(self.regA)
@@ -199,7 +153,7 @@ class STOP_Instruction(Instruction):
     Ends the program\n
     """
     def __init__(self):
-        super().__init__(opcode=0x08, operandBytes=0)
+        super().__init__(opcode=0x06, operandBytes=0)
 
 # TODO: add stack popping and pushing
 
@@ -894,5 +848,38 @@ class JMP_Instruction(Instruction):
         aVal = struct.unpack(">q", aBytes)[0]
         
         mem.pcReg = aVal
+
+class PUSH_Instruction(Instruction):
+    """
+    `PUSH REG_A`\n
+    REG_A: The register holding the value to be put onto the stack\n
+    Increments the stack pointer and writes the bytes of the REG_A into the place the stack pointer is pointing towards
+    """
+    def __init__(self, regA: REGISTER):
+        self.regA = regA
+        super().__init__(opcode=0x44, operandBytes=1)
+
+    def execute(self, mem):
+        aBytes = mem.getGeneralRegBytes(self.regA)
+        aVal = struct.unpack(">q", aBytes)[0]
         
+        mem.spReg += 1
+        mem.writeBytes( mem.STACK_START_ADDR + (mem.spReg*8), aBytes, 8 )
+        
+class POP_Instruction(Instruction):
+    """
+    `POP REG_A`\n
+    REG_A: The register to receive the value popped from the stack\n
+    Reads the bytes of the place the stack pointer is pointing towards into the REG_A and then decrements the stack pointer
+    """
+    def __init__(self, regA: REGISTER):
+        self.regA = regA
+        super().__init__(opcode=0x45, operandBytes=1)
+
+    def execute(self, mem):
+        stackBytes = mem.readBytes( mem.STACK_START_ADDR + (mem.spReg*8), 8, True )
+        mem.setGeneralRegBytes(self.regA, stackBytes)
+        mem.spReg -= 1
+    
+
 

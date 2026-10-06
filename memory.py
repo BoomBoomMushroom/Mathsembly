@@ -27,20 +27,21 @@ class Memory:
         with open(filePath, "wb") as f: f.write(self.memory)
     
     def read(self, addr: int): return self.memory[addr]
-    def readBytes(self, addr, readLength, readAsBytes=False):
+    def readBytes(self, addr, readLength, readAsBytes=False, isSigned=True):
         out = bytearray()
         for i in range(0, readLength):
             out.append( self.read(addr + i) )
         
-        if readAsBytes == False: out = int.from_bytes(out, byteorder="big", signed=True)
+        if readAsBytes == False: out = int.from_bytes(out, byteorder="big", signed=isSigned)
         return out
     
     def write(self, addr, value): self.memory[addr] = value
-    def writeBytes(self, addr, value: bytes|int, bytes):
+    def writeBytes(self, addr, value: bytes|int, writeLength, isSigned=True):
         if type(value) == int:
-            value = value.to_bytes(bytes, byteorder="big")
+            print(hex(addr), value, hex(value), writeLength, isSigned)
+            value = value.to_bytes(writeLength, byteorder="big", signed=isSigned)
         
-        for i in range(0, bytes):
+        for i in range(0, writeLength):
             self.write( addr, value[i] )
             addr += 1
     
@@ -57,19 +58,19 @@ class Memory:
     def zeroReg(self, val: int): pass # writing does nothing to the zero register
     
     @property
-    def pcReg(self) -> int: return self.readBytes(self.PC_ADDR, 3)
+    def pcReg(self) -> int: return self.readBytes(self.PC_ADDR, 3, isSigned=False)
     @pcReg.setter
-    def pcReg(self, val: int): self.writeBytes(self.PC_ADDR, val, 3)
+    def pcReg(self, val: int): self.writeBytes(self.PC_ADDR, val, 3, isSigned=False)
  
     @property
-    def spReg(self) -> int: return self.readBytes(self.SP_ADDR, 1)
+    def spReg(self) -> int: return self.readBytes(self.SP_ADDR, 1, isSigned=False)
     @spReg.setter
-    def spReg(self, val: int): self.writeBytes(self.SP_ADDR, val, 1)
+    def spReg(self, val: int): self.writeBytes(self.SP_ADDR, val, 1, isSigned=False)
     
     @property
-    def addrReg(self) -> int: return self.readBytes(self.ADDR_ADDR, 3)
+    def addrReg(self) -> int: return self.readBytes(self.ADDR_ADDR, 3, isSigned=False)
     @addrReg.setter
-    def addrReg(self, val: int): self.writeBytes(self.ADDR_ADDR, val, 3)
+    def addrReg(self, val: int): self.writeBytes(self.ADDR_ADDR, val, 3, isSigned=False)
     
     @property
     def regM(self) -> int: return self.readBytes(self.addrReg, 8)
@@ -77,9 +78,9 @@ class Memory:
     def regM(self, val: int): self.writeBytes(self.addrReg, val, 8)
     
     @property
-    def flagsReg(self) -> int: return self.readBytes(self.FLAGS_ADDR, 1)
+    def flagsReg(self) -> int: return self.readBytes(self.FLAGS_ADDR, 1, isSigned=False)
     @flagsReg.setter
-    def flagsReg(self, val: int): self.writeBytes(self.FLAGS_ADDR, val, 1)
+    def flagsReg(self, val: int): self.writeBytes(self.FLAGS_ADDR, val, 1, isSigned=False)
     
     @property
     def zeroFlag(self) -> bool: return (self.flagsReg & 0b1) == 0b1
@@ -141,7 +142,7 @@ class Memory:
             else:
                 raise RegisterNotFoundException(f"Register not found! {regName=}")   
         
-        print(regName, self.addrReg, val, hex(val))
+        #print(regName, self.addrReg, val, hex(val))
         return struct.pack(">q", val) # return the bytes
 
     def setGeneralRegBytes(self, regName: registers.REGISTER, value: bytes):
@@ -154,7 +155,8 @@ class Memory:
         elif regName == "SP": self.spReg = valInt & 0xFF
         elif regName == "ADDR": self.addrReg = valInt & 0xFFFFFF
         elif regName == "FLAGS": self.flagsReg = valInt & 0xFF
-        elif regName == "REG_M": self.regM = valInt & 0xFFFFFFFF_FFFFFFFF
+        #elif regName == "REG_M": self.regM = valInt & 0xFFFFFFFF_FFFFFFFF
+        elif regName == "REG_M": self.regM = value # REG_M should be written as bytes typically
         else:
             regNum: int = int( regName.split("_")[1].replace("I","").replace("F", "") )
             if self.isIntegerReg(regName):

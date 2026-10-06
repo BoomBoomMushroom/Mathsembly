@@ -75,26 +75,14 @@ def fetchAndDecode(mem: Memory) -> tuple[instructions.Instruction, int]:
         regB, _ = readRegOperand(mem, mem.pcReg + offset)
         offset += _
         i = instructions.CLTB_Instruction(regA, regB)
-    elif opcode == 0x04:
-        regA, _ = readRegOperand(mem, mem.pcReg + offset)
-        offset += _
-        imm = mem.readBytes(mem.pcReg + offset, 8)
-        offset += 8
-        i = instructions.SET_Instruction(regA, imm)
+    elif opcode == 0x04: i = instructions.SHOW_Instruction()
     elif opcode == 0x05:
-        regA, _ = readRegOperand(mem, mem.pcReg + offset)
-        offset += _
-        imm = mem.readBytes(mem.pcReg + offset, 1)
-        offset += 1
-        i = instructions.SETB_Instruction(regA, imm)
-    elif opcode == 0x06: i = instructions.SHOW_Instruction()
-    elif opcode == 0x07:
         regA, _ = readRegOperand(mem, mem.pcReg + offset)
         offset += _
         regB, _ = readRegOperand(mem, mem.pcReg + offset)
         offset += _
         i = instructions.PRINT_Instruction(regA, regB)
-    elif opcode == 0x08: i = instructions.STOP_Instruction()
+    elif opcode == 0x06: i = instructions.STOP_Instruction()
     
     elif opcode == 0x10:
         regA, _ = readRegOperand(mem, mem.pcReg + offset)
@@ -198,12 +186,44 @@ def fetchAndDecode(mem: Memory) -> tuple[instructions.Instruction, int]:
         offset += _
         i = instructions.CEIL_Instruction(regA, regB)
     
-    elif opcode == 0x30: i = instructions.SIN_Instruction()
-    elif opcode == 0x31: i = instructions.COS_Instruction()
-    elif opcode == 0x32: i = instructions.TAN_Instruction()
-    elif opcode == 0x33: i = instructions.ASIN_Instruction()
-    elif opcode == 0x34: i = instructions.ACOS_Instruction()
-    elif opcode == 0x35: i = instructions.ATAN2_Instruction()
+    elif opcode == 0x30:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        regB, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.SIN_Instruction(regA, regB)
+    elif opcode == 0x31:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        regB, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.COS_Instruction(regA, regB)
+    elif opcode == 0x32:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        regB, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.TAN_Instruction(regA, regB)
+    elif opcode == 0x33:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        regB, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.ASIN_Instruction(regA, regB)
+    elif opcode == 0x34:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        regB, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.ACOS_Instruction(regA, regB)
+    elif opcode == 0x35:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        regB, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        regC, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.ATAN2_Instruction(regA, regB, regC)
     
     elif opcode == 0x40:
         regA, _ = readRegOperand(mem, mem.pcReg + offset)
@@ -217,6 +237,18 @@ def fetchAndDecode(mem: Memory) -> tuple[instructions.Instruction, int]:
         regA, _ = readRegOperand(mem, mem.pcReg + offset)
         offset += _
         i = instructions.JMN_Instruction(regA)
+    elif opcode == 0x43:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.JMP_Instruction(regA)
+    elif opcode == 0x44:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.PUSH_Instruction(regA)
+    elif opcode == 0x45:
+        regA, _ = readRegOperand(mem, mem.pcReg + offset)
+        offset += _
+        i = instructions.POP_Instruction(regA)
     
     else: raise Exception(f"Unknown opcode {hex(opcode)}!!")
     
@@ -253,6 +285,7 @@ def execute(mem: Memory, i: instructions.Instruction, outTerminal: Terminal, scr
     if type(i) == instructions.SHOW_Instruction:
         renderScreen(mem, screen)
         return # return nothing so we don't accidentally end the program
+    
     
     out = i.execute(mem)
     if type(i) == instructions.PRINT_Instruction:
