@@ -1,0 +1,86 @@
+; An example program to show off the display
+# 0x0E1970
+
+; REG_0I  = Ball X
+; REG_1I  = Ball Y
+; REG_2I  = Ball Velocity X
+; REG_3I  = Ball Velocity Y
+; REG_4I  = Ball Color
+
+; REG_10I = stack working value
+; REG_11I = enter subroutine address
+
+; REG_28I = our video memory end address
+; REG_29I = video memory start address
+SET REG_29I 0x000970
+SET REG_28I 0x010970
+
+; x,y = 0, vx,vy = 5
+SET REG_0I 0
+SET REG_1I 0
+SET REG_2I 5
+SET REG_3I 5
+
+; Set up the video Settings
+;   write the video memory settings, 256x256, 8bpp
+SET ADDR 0x000960 ; the address for the first byte of video settings
+SETB REG_M 0b01000000 ; top 8 bits of the width param
+ADD ADDR 1 ADDR ; ADDR = ADDR + 1
+SETB REG_M 0b00100000 ; the final 2 bits of the width param and then the top 6 bits of the height
+ADD ADDR 1 ADDR
+SETB REG_M 0b00001000 ; the final 3 bits of the height and the 5 bits for the bit depth (bpp)
+SET PC 0x0E1B00 ; enter our loop :D
+
+# 0x0E1B00 ; loop start
+SET REG_4I 0x00 ; clear the ball; do this by making it black
+SET REG_10I 0x0E1B30 ; return address
+SET REG_11I 0x0E1C00 ; subroutine addr (draw ball)
+SET PC 0x0E3100 ; call subroutine
+# 0x0E1B30
+ADD REG_0I REG_2I REG_0I; x += vx
+ADD REG_1I REG_3I REG_1I; y += vy
+
+# 0x0E1B90
+SET REG_4I 0xFF ; draw the ball in white
+SET REG_10I 0x0E1C00 ; return address
+SET REG_11I 0x0E1C00 ; subroutine addr (draw ball)
+SET PC 0x0E3100 ; call subroutine
+# 0x0E1C00
+SHOW ; display the screen
+SET PC 0x0E1B00 ; go to the start of the loop
+
+
+# 0x0E1C00 ; draw ball subroutine
+; REG_5I is the ball pixel address
+COPY REG_29I REG_5I ; set it to the start video memory address
+ADD REG_5I REG_0I REG_5I ; a += x
+MOVE ZERO REG_0F ; to calculate the y index
+SET REG_1F 256.0; to multiply y value
+    ; also multiply it by the bytes per pixel, but it is 1 here so i'm not doing it
+MULT REG_1I REG_1F REG_0F ; yi = 256 * y
+ADD REG_5I REG_0I REG_5I ; a += x
+ADD REG_5I REG_0F REG_5I ; a += yi (or a += y*256)
+; now we have the address inside of REG_5I
+MOVE REG_5I ADDR ; set the working address to the ball pixel
+CLTB REG_4I REG_M ; copy the low byte of the ball's color (REG_4I) to the video pixel
+SET PC 0x0E3000 ; return from this subroutine
+
+
+# 0x0E3000 ; return from subroutine (pop value from stack and then goto it)
+SET ADDR 0x000210 ; the start off the stack
+MOVE SP REG_0F ; clear out a float reg to do (sp * 8)
+MULT SP 8 REG_0F ; SP *= 8 (b/c each value in the stack is 8 bytes)
+ADD ADDR REG_0F ADDR ; ADDR += (SP*8)
+COPY REG_M REG_10I ; copy the value from the stack into REG_10I
+SUB SP 1 SP ; stack pointer is decremented by 1
+COPY REG_10I PC ; jump to the address we popped from the stack
+
+# 0x0E3100 ; enter subroutine (push value from REG_10I onto the stack and goto the address in REG_11I)
+ADD SP 1 SP ; increment the stack pointer first (so in pop we decrement after getting the value)
+SET ADDR 0x000210 ; the start off the stack
+MOVE SP REG_0F ; clear out a float reg to do (sp * 8)
+MULT SP 8 REG_0F ; SP *= 8 (b/c each value in the stack is 8 bytes)
+ADD ADDR REG_0F ADDR ; ADDR += (SP*8)
+COPY REG_10I REG_M ; copy the value into the stack into REG_10I
+COPY REG_11I PC
+

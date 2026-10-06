@@ -1,0 +1,46 @@
+; An example program to show off the display
+# 0x0E1970
+
+; REG_0I  = pixel index
+; REG_28I = our video memory end address
+; REG_29I = video memory start address
+; REG_30I = loop start address
+; REG_31I = loop finish subroutine address
+SET REG_27I 256
+SET REG_29I 0x000970
+SET REG_28I 0x030970
+SET REG_30I 0x0E1A00
+SET REG_31I 0x0E1B00
+
+; Set up the video Settings
+;   write the video memory settings, 256x256, 24bpp
+SET ADDR 0x000960 ; the address for the first byte of video settings
+SETB REG_M 0b01000000 ; top 8 bits of the width param
+ADD ADDR 1 ADDR ; ADDR = ADDR + 1
+SETB REG_M 0b00100000 ; the final 2 bits of the width param and then the top 6 bits of the height
+ADD ADDR 1 ADDR
+SETB REG_M 0b00011000 ; the final 3 bits of the height and the 5 bits for the bit depth (bpp)
+
+COPY REG_29I ADDR ; video memory start addr
+COPY REG_30I PC ; goto the loop's start
+
+# 0x0E1A00 ; set where our loop will live in memory
+SUB ADDR REG_29I REG_0I
+DIV REG_0I 3 REG_0I ; get the video index (addr - startAddr) / 3
+DIV REG_0I 255 REG_1I ; y value
+
+CLTB REG_1I REG_M ; write the red byte of video memory, from the y value
+ADD ADDR 1 ADDR ; goto the next byte in the video memory
+CLTB REG_0I REG_M ; green channel = index
+ADD ADDR 1 ADDR
+CLTB ADDR REG_M ; blue channel = address
+ADD ADDR 1 ADDR
+
+SUB ADDR REG_28I ZERO ; check if our address is equal to the end video memory address, updates the zero flag
+JMZ REG_31I ; if they're equal go to the loop end
+COPY REG_30I PC ; goto the loop's start
+
+
+# 0x0E1B00 ; where to go after our loop completes
+SHOW
+STOP
