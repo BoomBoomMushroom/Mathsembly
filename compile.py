@@ -196,9 +196,12 @@ def instructionsToMachineCode(instructs: list[instructions.Instruction]) -> byte
 
 
 if __name__ == "__main__":
-    programSourceCode = loadSourceCode("./examplePrograms/bounce.masm")
+    fileName = input("Enter source file name (must be placed in ./examplePrograms): ")
+    if fileName == "": fileName = "bounce.masm"
+    programSourceCode = loadSourceCode(f"./examplePrograms/{fileName}")
     programInstructions: list[instructions.Instruction] = turnIntoInstructionsList(programSourceCode)
     for a in programInstructions: print("\t", a)
     machineCode = instructionsToMachineCode(programInstructions)
     with open("./program.mc", "wb") as f: f.write(machineCode)
+    print("Wrote compiled program to `./program.mc`")
 

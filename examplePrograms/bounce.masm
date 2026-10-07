@@ -6,12 +6,13 @@
 ; REG_2I  = Ball Velocity X
 ; REG_3I  = Ball Velocity Y
 ; REG_4I  = Ball Color
+; REG_5I  = Frame Number
 
 !INIT
-    COPY 0 REG_0I ; x = 0
-    COPY 0 REG_1I ; y = 0
-    COPY 5 REG_2I ; vx = 5
-    COPY 5 REG_3I ; vy = 5
+    COPY 128 REG_0I ; x
+    COPY 128 REG_1I ; y
+    COPY 3 REG_2I ; vx
+    COPY -6 REG_3I ; vy
 
 !INIT_VIDEO
     ; Set up the video Settings
@@ -30,7 +31,7 @@
 !MOVE_BALL
     ADD REG_0I REG_2I REG_0I; x += vx
     ADD REG_1I REG_3I REG_1I; y += vy
-    
+
     PUSH CALL_DRAW_WHITE ; return addr
     JMP CHECK_BOUNDS
 !CALL_DRAW_WHITE
@@ -38,17 +39,20 @@
     PUSH DISPLAY
     JMP DRAW_BALL
 !DISPLAY
+    ADD REG_5I 1 REG_5I ; frameNum += 1
     SHOW ; display the screen
     JMP LOOP
+
 
 !DRAW_BALL
     ; REG_5I is the ball pixel address
     COPY 0x000970 REG_5I ; set it to the start video memory address
-    ADD REG_5I REG_0I REG_5I ; a += x
+    
     MOVE ZERO REG_0F ; to calculate the y index
     COPY 256.0 REG_1F; to multiply y value
         ; also multiply it by the bytes per pixel, but it is 1 here so i'm not doing it
     MULT REG_1I REG_1F REG_0F ; yi = 256 * y
+    
     ADD REG_5I REG_0I REG_5I ; a += x
     ADD REG_5I REG_0F REG_5I ; a += yi (or a += y*256)
     ; now we have the address inside of REG_5I

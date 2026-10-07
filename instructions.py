@@ -438,7 +438,7 @@ class SQRT_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.sqrt(aBytes)
+        rVal = math.sqrt(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -498,7 +498,7 @@ class LN_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.log(aBytes)
+        rVal = math.log(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -525,7 +525,7 @@ class ROUND_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = round(aBytes)
+        rVal = round(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -552,7 +552,7 @@ class FLOOR_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.floor(aBytes)
+        rVal = math.floor(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -579,7 +579,7 @@ class CEIL_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.ceil(aBytes)
+        rVal = math.ceil(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -607,7 +607,7 @@ class SIN_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.sin(aBytes)
+        rVal = math.sin(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -634,7 +634,7 @@ class COS_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.cos(aBytes)
+        rVal = math.cos(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -661,7 +661,7 @@ class TAN_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.tan(aBytes)
+        rVal = math.tan(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -687,7 +687,7 @@ class ASIN_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.asin(aBytes)
+        rVal = math.asin(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)
@@ -714,7 +714,7 @@ class ACOS_Instruction(Instruction):
         aType = ">d" if mem.isFloatReg(self.regA) else ">q"
         aVal = struct.unpack(aType, aBytes)[0]
         
-        rVal = math.acos(aBytes)
+        rVal = math.acos(aVal)
         rType = ">d" if mem.isFloatReg(self.regB) else ">q"
         if rType == ">q": rVal = math.floor(rVal)
         rBytes = struct.pack(rType, rVal)

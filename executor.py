@@ -5,6 +5,7 @@ from memory import Memory, RegisterNotFoundException
 from manyterm import Terminal
 from PIL import Image
 import pygame
+import time
 
 
 class Screen:
@@ -304,6 +305,7 @@ def runProgram(machineCode: bytes, outTerminal: Terminal, screen: Screen):
         i, bytesRead = fetchAndDecode(memory)
         memory.pcReg += bytesRead
         response: int = execute(memory, i, outTerminal, screen)
+        #time.sleep(0.01)
         
         if response != None:
             print(f"Program exited w/ status code {response}")

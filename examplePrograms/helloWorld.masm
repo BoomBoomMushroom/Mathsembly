@@ -1,9 +1,9 @@
-SET REG_0I 0x0E0000 ; start of string
+COPY 0x0E0000 REG_0I ; start of string
 
 COPY REG_0I ADDR
-SET REG_M 0x48_65_6C_6C_6F_2C_20_57 ; write "Hello, W" into memory
+COPY 0x48_65_6C_6C_6F_2C_20_57 REG_M ; write "Hello, W" into memory
 ADD ADDR 8 ADDR ; increment the string pointer
-SET REG_M 0x6F_72_6C_64_21_00_00_00 ; write "orld!" into memory
+COPY 0x6F_72_6C_64_21_00_00_00 REG_M ; write "orld!" into memory
 
 COPY REG_0I ADDR
 PRINT 13 0 ; print 13 characters starting from ADDR, 0 for print in utf-8 mode
