@@ -3,12 +3,18 @@ An assembly programming language where you have dedicated math instructions
 
 ![helloWorld.masm running](./readmeImages/helloWorld.png)
 
-# Installation
+# Manual Installation
 1. Create `.venv` via `python -m venv .venv`
 2. Activate the venv enviroment via `source .venv/bin/activate`
 3. Install dependencies `python -m pip install -r requirements.txt`
-4. Compile a program by running `python compile.py`
-5. Run your compiled program by running `python executor.py`
+
+# "Automatic" Installion
+1. Run `chmod +x ./setup.sh && ./setup.sh` to setup the python enviroment and install all the packages
+
+# Use
+- Compile a program by running `python compile.py`
+- Run your compiled program by running `python executor.py`
+- Note: `program.mc` in this repo is an already compiled program you can run. Compiling programs will override that one
 
 # 34 Instructions
 - NOP - Does nothing
